@@ -216,10 +216,13 @@ class AnaplanImportActions {
      * To help manage the size of a dump file and prevent timeouts, download the dump file in chunks.
      * Chunks are 10mb or less and numbered sequentially from 0.
      *
-     * @param {string} workspaceId - The ID of the workspace.
-     * @param {string} modelId - The ID of the model.
-     * @param {string} importId - The ID of the import.
-     * @param {string} taskId - The ID of the task.
+     * @param {Object} params - The parameters to pass to the API.
+     * @param {string} params.workspaceId - The ID of the workspace.
+     * @param {string} params.modelId - The ID of the model.
+     * @param {string} params.importId - The ID of the import.
+     * @param {string} params.taskId - The ID of the task.
+     * @param {string} params.limit - The maximum number of chunks to return in the page.
+     * @param {string} params.offset - The number of pages to skip before returning the page.
      * @returns {Promise<Object>} - A promise that resolves to the result data.
      * ```json
      * {
@@ -255,9 +258,14 @@ class AnaplanImportActions {
      *   }
      * ```
      */
-    async getDumpFileChunks(workspaceId, modelId, importId, taskId) {
+    async getDumpFileChunks(params) {
         try {
-            const response = await this.apiClient.get(`/workspaces/${workspaceId}/models/${modelId}/imports/${importId}/tasks/${taskId}/dump/chunks`);
+            const response = await this.apiClient.get(`/workspaces/${params.workspaceId}/models/${params.modelId}/imports/${params.importId}/tasks/${params.taskId}/dump/chunks`, {
+                    params: {
+                        limit: params.limit,
+                        offset: params.offset,
+                    }
+                });
             return response.data;
         } catch (error) {
             handleError(error);

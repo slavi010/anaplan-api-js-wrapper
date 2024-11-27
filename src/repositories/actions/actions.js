@@ -35,9 +35,12 @@ class AnaplanActions {
      * - `actionType` is the type of action contained in the model.
      * - `name` is the name of the action that you can carry out. You can view these actions in the Anaplan user interface in the Action settings for the model.
      *
-     * @param {string} workspaceId - The ID of the workspace.
-     * @param {string} modelId - The ID of the model.
-     * @returns {Promise<Object>} - A promise that resolves to the response
+     * @param {object} params - The parameters to pass to the API.
+     * @param {string} params.workspaceId - The ID of the workspace.
+     * @param {string} params.modelId - The ID of the model.
+     * @param {number} [params.limit] - The number of actions to return in the page.
+     * @param {number} [params.offset] - The number of pages to skip before returning the data.
+     * @returns {Promise<Object>} - A promise that resolves to the response.
      * ```json
      * {
      *   "meta": {
@@ -112,9 +115,15 @@ class AnaplanActions {
      * ```
      *
      */
-    async listModelActions(workspaceId, modelId) {
+    async listModelActions(params) {
         try {
-            const response = await this.apiClient.get(`/workspaces/${workspaceId}/models/${modelId}/actions`);
+            const response = await this.apiClient.get(`/workspaces/${params.workspaceId}/models/${params.modelId}/actions`,
+                {
+                    params: {
+                        limit: params.limit,
+                        offset: params.offset,
+                    }
+                });
             return response.data;
         } catch (error) {
             handleError(error);

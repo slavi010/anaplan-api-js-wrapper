@@ -301,11 +301,14 @@ class AnaplanProcessActions {
      * In order to get the dump file for a particular action in the process, use the ObjectID.
      * The ObjectID can be obtained from the /tasks/{taskId} endpoint.
      *
-     * @param {string} workspaceId - The ID of the workspace.
-     * @param {string} modelId - The ID of the model.
-     * @param {string} processId - The ID of the process.
-     * @param {string} taskId - The ID of the task.
-     * @param {string} objectId - The ID of the dump object.
+     * @param {Object} params - The parameters to pass to the API.
+     * @param {string} params.workspaceId - The ID of the workspace.
+     * @param {string} params.modelId - The ID of the model.
+     * @param {string} params.processId - The ID of the process.
+     * @param {string} params.taskId - The ID of the task.
+     * @param {string} params.objectId - The ID of the dump object.
+     * @param {number} [params.limit] - The number of chunks to return in the page.
+     * @param {number} [params.offset] - The number of pages to skip.
      * @returns {Promise<Object>} - A promise that resolves to
      * ```JSON
      * {
@@ -342,10 +345,15 @@ class AnaplanProcessActions {
      * }
      * ```
      */
-    async getProcessDumpFileChunks(workspaceId, modelId, processId, taskId, objectId) {
+    async getProcessDumpFileChunks(params) {
         try {
-            const response = await this.apiClient.get(`/workspaces/${workspaceId}/models/${modelId}/processes/${processId}/tasks/${taskId}/dumps/${objectId}/chunks`);
-            return response.data.chunks;
+            const response = await this.apiClient.get(`/workspaces/${params.workspaceId}/models/${params.modelId}/processes/${params.processId}/tasks/${params.taskId}/dumps/${params.objectId}/chunks`, {
+                params: {
+                    limit: params.limit,
+                    offset: params.offset,
+                },
+            });
+            return response.data;
         } catch (error) {
             handleError(error);
         }

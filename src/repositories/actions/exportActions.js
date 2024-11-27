@@ -6,7 +6,7 @@
  */
 
 const axios = require('axios');
-const { handleError } = require('../errorHandler');
+const {handleError} = require('../errorHandler');
 
 /**
  * AnaplanExportActions class to interact with Anaplan Export Actions API.
@@ -35,9 +35,12 @@ class AnaplanExportActions {
      * This enables you to decide on the Export action to carry out.
      * If you already know the ID of the export definition, you can skip this step.
      *
-     * @param {string} workspaceId - The ID of the workspace.
-     * @param {string} modelId - The ID of the model.
-     * @returns {Promise<Array>} - A promise that resolves to an array of export definitions.
+     * @param {Object} params - The parameters to pass to the API.
+     * @param {string} params.workspaceId - The ID of the workspace.
+     * @param {string} params.modelId - The ID of the model.
+     * @param {number} [params.limit] The number of export definitions to return in the page.
+     * @param {number} [params.offset] - The number of pages to skip before returning the first export definition.
+     * @returns {Promise<Object>} - A promise that resolves to the response.
      * ```json
      * {
      *   "meta":{
@@ -67,9 +70,16 @@ class AnaplanExportActions {
      * }
      * ```
      */
-    async listExportDefinitions(workspaceId, modelId) {
+    async listExportDefinitions(params) {
         try {
-            const response = await this.apiClient.get(`/workspaces/${workspaceId}/models/${modelId}/exports`);
+            const response = await this.apiClient.get(`/workspaces/${params.workspaceId}/models/${params.modelId}/exports`,
+                {
+                    params: {
+                        limit: params.limit,
+                        offset: params.offset
+                    }
+                }
+            );
             return response.data;
         } catch (error) {
             handleError(error);
@@ -164,10 +174,14 @@ class AnaplanExportActions {
     /**
      * Lists export tasks for a specific export.
      *
-     * @param {string} workspaceId - The ID of the workspace.
-     * @param {string} modelId - The ID of the model.
-     * @param {string} exportId - The ID of the export.
-     * @returns {Promise<Array>} - A promise that resolves to an array of export tasks.
+     * @param {Object} params - The parameters to pass to the API.
+     * @param {string} params.workspaceId - The ID of the workspace.
+     * @param {string} params.modelId - The ID of the model.
+     * @param {string} params.exportId - The ID of the export.
+     * @param {number} [params.limit] - The maximum number of export tasks to return in the page.
+     * @param {number} [params.offset] - The number of pages to skip before returning the first export task.
+     *
+     * @returns {Promise<Object>} - A promise that resolves to response.
      * ```json
      * {
      *   "meta":{
@@ -192,10 +206,16 @@ class AnaplanExportActions {
      * }
      * ```
      */
-    async listExportTasks(workspaceId, modelId, exportId) {
+    async listExportTasks(params) {
         try {
-            const response = await this.apiClient.get(`/workspaces/${workspaceId}/models/${modelId}/exports/${exportId}/tasks`);
-            return response.data;
+            const response = await this.apiClient.get(`/workspaces/${params.workspaceId}/models/${params.modelId}/exports/${params.exportId}/tasks`,
+                {
+                    params: {
+                        limit: params.limit,
+                        offset: params.offset
+                    }
+                });
+                return response.data;
         } catch (error) {
             handleError(error);
         }
@@ -262,9 +282,12 @@ class AnaplanExportActions {
      * Retrieves the list of files for a model, including both import and export files.
      * You can identify an export file by its metadata and id.
      *
-     * @param {string} workspaceId - The ID of the workspace.
-     * @param {string} modelId - The ID of the model.
-     * @returns {Promise<Array>} - A promise that resolves to an array of files.
+     * @param {Object} params - The parameters to pass to the API.
+     * @param {string} params.workspaceId - The ID of the workspace.
+     * @param {string} params.modelId - The ID of the model.
+     * @param {number} [params.limit] - The maximum number of files to return in the page.
+     * @param {number} [params.offset] - The number of pages to skip before returning the first file.
+     * @returns {Promise<Object>} - A promise that resolves to the response.
      * ```json
      * {
      *   "meta":{
@@ -313,10 +336,16 @@ class AnaplanExportActions {
      * }
      * ```
      */
-    async listFiles(workspaceId, modelId) {
+    async listFiles(params) {
         try {
-            const response = await this.apiClient.get(`/workspaces/${workspaceId}/models/${modelId}/files`);
-            return response.data.files;
+            const response = await this.apiClient.get(`/workspaces/${params.workspaceId}/models/${params.modelId}/files`,
+                {
+                    params: {
+                        limit: params.limit,
+                        offset: params.offset
+                    }
+                });
+                return response.data;
         } catch (error) {
             handleError(error);
         }
@@ -326,9 +355,12 @@ class AnaplanExportActions {
     /**
      * Retrieves the chunks of a file.
      *
-     * @param {string} workspaceId - The ID of the workspace.
-     * @param {string} modelId - The ID of the model.
-     * @param {string} fileId - The ID of the file.
+     * @param {Object} params - The parameters to pass to the API.
+     * @param {string} params.workspaceId - The ID of the workspace.
+     * @param {string} params.modelId - The ID of the model.
+     * @param {string} params.fileId - The ID of the file.
+     * @param {number} [params.limit] - The maximum number of chunks to return in the page.
+     * @param {number} [params.offset] - The number of pages to skip before returning the first chunk.
      * @returns {Promise<Object>} - A promise that resolves to the result data.
      * ```json
      * {
@@ -365,10 +397,16 @@ class AnaplanExportActions {
      * }
      * ```
      */
-    async getFileChunks(workspaceId, modelId, fileId) {
+    async getFileChunks(params) {
         try {
-            const response = await this.apiClient.get(`/workspaces/${workspaceId}/models/${modelId}/files/${fileId}/chunks`);
-            return response.data;
+            const response = await this.apiClient.get(`/workspaces/${workspaceId}/models/${modelId}/files/${fileId}/chunks`,
+                {
+                    params: {
+                        limit: params.limit,
+                        offset: params.offset
+                    }
+                });
+                return response.data;
         } catch (error) {
             handleError(error);
         }
@@ -396,4 +434,5 @@ class AnaplanExportActions {
 
 }
 
-module.exports = AnaplanExportActions;
+module
+    .exports = AnaplanExportActions;

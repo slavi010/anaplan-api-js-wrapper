@@ -32,8 +32,8 @@ class AnaplanModels {
      * @param {Object} [params={}] - Optional parameters for the request.
      * @param {boolean} [params.modelDetails] - Whether to include model memory usage.
      * @param {string} [params.s] - Search pattern to retrieve models.
-     * @param {number} [params.offset] - Starting point from which models are returned.
-     * @param {number} [params.limit] - Number of models to be returned by the request.
+     * @param {number} [params.limit] - The number of models to return in the page.
+     * @param {number} [params.offset] - The number of pages to skip before returning the data.
      * @returns {Promise<Array>} - A promise that resolves to an array of models.
      * ```json
      * [{
@@ -47,9 +47,16 @@ class AnaplanModels {
      * }]
      * ```
      */
-    async listModels(params = {}) {
+    async listModels(params) {
         try {
-            const response = await this.apiClient.get('/models', { params });
+            const response = await this.apiClient.get('/models', {
+                params: {
+                    modelDetails: params.modelDetails ? 'true' : 'false',
+                    s: params.s,
+                    limit: params.limit,
+                    offset: params.offset
+                }
+            });
             return response.data.models;
         } catch (error) {
             handleError(error);
@@ -108,9 +115,12 @@ class AnaplanModels {
 
     /**
      * Retrieves models for a specific workspace.
-     * @param {string} workspaceId - The ID of the workspace.
-     * @param {boolean} [modelDetails=false] - Whether to include model memory usage.
-     * @returns {Promise<Array>} - A promise that resolves to an array of models.
+     * @param {Object} params - Parameters for the request.
+     * @param {string} params.workspaceId - The ID of the workspace.
+     * @param {boolean} params.modelDetails=false - Whether to include model memory usage.
+     * @param {number} [params.limit] - The number of models in the page.
+     * @param {number} [params.offset] - The number of pages to skip before returning the data.
+     * @returns {Promise<Object>} - A promise that resolves to the response.
      * ```json
      * {
      *   "meta": {
@@ -224,12 +234,16 @@ class AnaplanModels {
      * }
      * ```
      */
-    async retrieveModelsForWorkspace(workspaceId, modelDetails = false) {
+    async retrieveModelsForWorkspace(params = {}) {
         try {
-            const response = await this.apiClient.get(`/workspaces/${workspaceId}/models`, {
-                params: { modelDetails }
+            const response = await this.apiClient.get(`/workspaces/${params.workspaceId}/models`, {
+                params: {
+                    modelDetails: params.modelDetails ? 'true' : 'false',
+                    limit: params.limit,
+                    offset: params.offset
+                }
             });
-            return response.data.models;
+            return response.data;
         } catch (error) {
             handleError(error);
         }
