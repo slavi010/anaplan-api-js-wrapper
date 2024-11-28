@@ -12,51 +12,36 @@ This project integrates with the Anaplan API to perform almost all the API calls
   *This one is really in the beginning and will be improved in the future.*
 
 ## Example
-Below is an example of how to use the repository directly.
+Below is an example of how to use the AnaplanClient to connect to Anaplan and list all workspaces and models.
 ```javascript
-// connect to the API
-const m = require('./repositories');
 // you should have a .env file in the root directory of the project
 // with the following content:
 // ANAPLAN_USERNAME=<your-username>
 // ANAPLAN_PASSWORD=<your-password>
 // ANAPLAN_INTEGRATION_API_URL=https://api.anaplan.com/2/0/
 require('dotenv').config({ path: '../.env'});
+const AnaplanClient = require('../src/Client');
 
-function main () {
-    // prepare the authentication
-    const auth = new m.anaplanAuth();
-    auth.createAuthToken(process.env.ANAPLAN_USERNAME, process.env.ANAPLAN_PASSWORD)
-        .then((token) => {
-            // when the authentication is successful, you can use the token to interact with the API
-            process.env.AUTH_TOKEN = token.token;
-            console.log('Login message:', token.statusMessage);
-            process.env.AUTH_TOKEN_FULL = token.tokenInfo;
-            process.env.AUTH_TOKEN = token.tokenInfo.tokenValue;
-            
-            // list all the workspaces
-            const workspaces = new m.workspaces(process.env.AUTH_TOKEN);
-            workspaces.listWorkspaces()
-                .then((workspaces) => {
-                    console.log(workspaces);
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
-            
-            // list all the models
-            const models = new m.models(process.env.AUTH_TOKEN);
-            models.listModels()
-                .then((models) => {
-                    console.log(models);
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
-        })
-        .catch((error) => {
-            console.error(error);
-        });
+async function main () {
+    const client = new AnaplanClient();
+
+    // Connect to Anaplan with username and password
+    await client.connect({
+        username: process.env.ANAPLAN_USERNAME,
+        password: process.env.ANAPLAN_PASSWORD
+    });
+
+    // Verify connection, throw an error if not connected
+    await client.verifyConnection();
+    console.log('Connected to Anaplan');
+
+    // List all workspaces
+    const workspaces = await client.getAllWorkspaces();
+    console.log(workspaces[0]);
+
+    // List all models of the first workspace
+    const models = await workspaces[0].getAllModels();
+    console.log(models[0]);
 }
 
 main();
@@ -71,11 +56,11 @@ main();
 
 1. Clone the repository:
     ```sh
-    git clone <repository-url>
+    git clone https://github.com/slavi010/anaplan-api-js-wrapper.git
     ```
 2. Navigate to the project directory:
     ```sh
-    cd <project-directory>
+    cd anaplan-api-js-wrapper
     ```
 3. Install the dependencies:
     ```sh

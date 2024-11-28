@@ -4,19 +4,19 @@
  * @createdAt 11/2024
  * @license GNU AGPLv3
  *
- * @fileoverview Client class for the client side of the application. WIP
+ * @fileoverview AnaplanClient class for the client side of the application. WIP
  */
 
 const axios = require('axios');
 const m = require('./repositories');
-
+const Workspace = require('./models/workspaces');
 /**
- * Client class for the client side of the application.
+ * AnaplanClient class for the client side of the application.
  * mix of the model classes to interact with the Anaplan APIs.
  */
-class Client {
+class AnaplanClient {
     /**
-     * Creates an instance of Client.
+     * Creates an instance of AnaplanClient.
      */
     constructor() {
         this._authRepository = new m.anaplanAuth();
@@ -33,6 +33,7 @@ class Client {
             const authToken = await this._authRepository.createAuthToken(username, password);
             this.fullToken = authToken.tokenInfo;
             this.token = authToken.tokenInfo.tokenValue;
+            await this._prepareRepositories();
         } catch (error) {
             m.errorHandler.handleError(error);
         }
@@ -49,6 +50,7 @@ class Client {
             const authToken = await this._authRepository.createAuthTokenWithCertificate(certificate, encodedString, encodedSignedString);
             this.fullToken = authToken.tokenInfo;
             this.token = authToken.tokenInfo.tokenValue;
+            await this._prepareRepositories();
         } catch (error) {
             m.errorHandler.handleError(error);
         }
@@ -57,7 +59,7 @@ class Client {
     /**
      * Prepare all repositories when connected.
      */
-    async _prepareModels() {
+    async _prepareRepositories() {
         this._repositories = {
             deleteActions: new m.deleteActions(this.token),
             downloadFiles: new m.downloadFiles(this.token),
@@ -113,7 +115,7 @@ class Client {
 
     /**
      * Get All Workspaces.
-     * @returns {Promise<Array>} - A promise that resolves to an array of workspaces.
+     * @returns {Promise<Workspace[]>} - A promise that resolves to an array of workspaces.
      * [
      *   {
      *   "id": "8a8b8c8d8e8f8g8i",
@@ -125,19 +127,21 @@ class Client {
      * ]
      */
     async getAllWorkspaces() {
-        try {
-            await this.verifyConnection();
-            return await this._repositories.workspaces.listWorkspaces();
-        } catch (error) {
-            m.errorHandler.handleError(error);
-        }
+        await this.verifyConnection();
+        const workspaces = await this._repositories.workspaces.listWorkspaces();
+        return workspaces.map(workspace => new Workspace(this, workspace))
     }
 
     /**
-     * Get One Workspace.
-     * @param {string} workspaceId - The ID of the workspace.
-     * @param {boolean} [setAsCurrent=true] - Whether to set the workspace as the current workspace.
-     * @returns {Promise<Object>} - A promise that resolves to the workspace information.
+     * Get One Workspace by its ID or name.
+     *
+     * If both name and ID are provided, the ID will be used.
+     * If neither name nor ID are provided, an error will be thrown.
+     *
+     * @param {string} [workspaceId] - The ID of the workspace.
+     * @param {string} [workspaceName] - The name of the workspace.
+     *
+     * @returns {Promise<Workspace>} - A promise that resolves to the workspace information.
      * {
      *   "id": "8a8b8c8d8e8f8g8i",
      *   "name": "Financial Planning",
@@ -145,39 +149,25 @@ class Client {
      *   "sizeAllowance": 1073741824,
      *   "currentSize": 873741824
      * }
+     * @throws {Error} - If workspaceId and workspaceName are not provided.
+     * @example
+     * const workspace = await client.getOneWorkspace({workspaceId: '8a8b8c8d8e8f8g8i'});
+     * const workspace = await client.getOneWorkspace({workspaceName: 'Financial Planning'});
      */
-    async getOneWorkspace({workspaceId, setAsCurrent = true}) {
-        try {
-            await this.verifyConnection();
-            const workspace = await this._repositories.workspaces.getWorkspace(workspaceId);
-            if (setAsCurrent && workspace) {
-                this.currentWorkspaceId = workspaceId;
-            }
-            return workspace;
-        } catch (error) {
-            m.errorHandler.handleError(error);
+    async getOneWorkspace({workspaceId, workspaceName}) {
+        if (!workspaceId && !workspaceName) {
+            throw new Error('Please provide a workspaceId or workspaceName.');
+        }
+        await this.verifyConnection();
+
+        if (workspaceId) {
+            const workspaceData = await this._repositories.workspaces.getWorkspace(workspaceId);
+            return new Workspace(this, workspaceData);
+        } else {
+            const workspaces = await this.getAllWorkspaces();
+            return workspaces.find(workspace => workspace.name === workspaceName);
         }
     }
-
-    /**
-     * Lists all models the user has access to.
-     *
-     * Results will be limited to the first 5000 models.
-     *
-     * @returns {Promise<Array>} - A promise that resolves to an array of models.
-     */
-    async getAllModels() {
-        try {
-            await this.verifyConnection();
-            return await this._repositories.models.listModels();
-        } catch (error) {
-            m.errorHandler.handleError(error);
-        }
-    }
-
-    /**
-     * Retrieves information about a specific model.
-     * @param {string} modelId - The ID of the model.
-     * @returns {Promise<Object>} - A promise that resolves to the model information.
-     */
 }
+
+module.exports = AnaplanClient;

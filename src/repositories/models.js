@@ -102,7 +102,7 @@ class AnaplanModels {
      *   "lastModified": "2022-02-10T19:14:24.000+0000"
      * }
      */
-    async getModel(modelId, modelDetails = false) {
+    async getModel({modelId, modelDetails = false}) {
         try {
             const response = await this.apiClient.get(`/models/${modelId}`, {
                 params: { modelDetails }

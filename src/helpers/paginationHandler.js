@@ -10,7 +10,8 @@
  *
  * This
  *
- * @param {function} apiCall - The API call to make.
+ * @param {Object} repository - The repository where the apiCall is located.
+ * @param {string} apiCallName - The name of the function to call in the repository.
  * - The function must return a promise that resolves to an object with the following properties:
  * ```json
  * "meta":{
@@ -36,10 +37,16 @@
  * -1 means no limit.
  *
  * @returns {Promise<Array>} - A promise that resolves to an array of data.
- *
- * TODO test this function
+ * @example
+ * const data = await paginationHandler({
+ *   repository: myRepository,
+ *   apiCallName: 'myApiCall',
+ *   params: { myParam: 'value' },
+ *   pageSize: 1000, // max 1000 items per page
+ *   maxPages: -1 // No limit
+ * });
  */
-function paginationHandler(apiCall, params, pageSize = 1000, maxPages = -1) {
+function paginationHandler({repository, apiCallName, params, pageSize = 1000, maxPages = -1}) {
     return new Promise(async (resolve, reject) => {
         let offset = 0;
         let data = [];
@@ -49,13 +56,14 @@ function paginationHandler(apiCall, params, pageSize = 1000, maxPages = -1) {
         let currentSize = 0;
 
         do {
-            const response = await apiCall({ ...params, limit: pageSize, offset });
+            const response = await repository[apiCallName]({ ...params, limit: pageSize, offset });
             if (currentPage === 0) {
                 totalSize = response.meta.paging.totalSize;
                 totalPages = Math.ceil(totalSize / pageSize);
             }
             currentSize = response.meta.paging.currentPageSize;
-            data = data.concat(response.data);
+            const content = Object.values(response).filter((value) => Array.isArray(value))[0];
+            data = data.concat(content);
             offset += currentSize;
             currentPage++;
         } while (currentSize > 0 && (maxPages === -1 || currentPage < maxPages));
@@ -63,3 +71,5 @@ function paginationHandler(apiCall, params, pageSize = 1000, maxPages = -1) {
         resolve(data);
     });
 }
+
+module.exports = paginationHandler;
